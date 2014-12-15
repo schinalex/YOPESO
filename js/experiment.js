@@ -119,7 +119,7 @@ var deleteRow = function(key) {
 };
 
 var saveToLocalStorage = function(data, row, key){
-		(key)? data[key]=row : (row.id == 1)? data[key]=row : data.push(row);
+		(key)? data[key]=row : (row.id == 1 && data[2])? data[key]=row : data.push(row);
 		localStorage.setItem("data", JSON.stringify(data));
 		dialog.dialog("close");
 		loadData();
