@@ -1,20 +1,20 @@
-var openModal = function(func) {
-	var realFunc = func;
-	$("#myForm")
+var modalForm = $("#myForm");
+var openModal = function(editOrAdd) {
+	modalForm
 		.off("submit")
 		.on("submit", function(e){
 			e.preventDefault();
-			if($( "#myForm" ).valid()) {
-				realFunc();
+			if(modalForm.valid()) {
+				editOrAdd();
 			}
 		});
 
-	dialog = $("#myForm").dialog({
+	dialog = modalForm.dialog({
 		modal : true,
 		buttons : {
 			"Save" : function(){
-				if ($( "#myForm" ).valid()) {
-					func();
+				if (modalForm.valid()) {
+					editOrAdd();
 				}
 			},
 			Cancel : function(){
@@ -37,22 +37,22 @@ $("#button").on('click', function() {
 
 	// open modal for saving data
 
-	openModal(saveFunc);
+	openModal(addRow);
 });
 
-var saveFunc = function() {	
+var addRow = function() {	
 	
 	var data = JSON.parse(localStorage.getItem("data")) || [] ;
 
 	var row = {
-			id : (data.length ? data[data.length - 1].id + 1 : 1),
+			id : (data.length) ? parseInt(data[data.length - 1].id) + 1 : 1,
 			title : $("#title").val(),
 			brand : $("#brand").val(),
-			usd : $("#sales").val() || 0,
+			usd : parseInt($("#sales").val() || 0),
 			chf : parseInt($("#sales").val() * 1.1),
 			quarter : $("#quarter").val(),
 			year : $("#year").val(),
-			launch : $("#quarter").val() + " " + $("#year").val(),
+			launch : $("#year").val() + " " + $("#quarter").val(),
 			winconf : $("#winconf").val()
 		};
 
@@ -79,11 +79,11 @@ var edit = function(key) {
 					id : data[key].id,
 					title : $("#title").val(),
 					brand : $("#brand").val(),
-					usd : $("#sales").val() || 0,
+					usd : parseInt($("#sales").val() || 0),
 					chf : parseInt($("#sales").val() * 1.1),
 					quarter : $("#quarter").val(),
 					year : $("#year").val(),
-					launch : $("#quarter").val() + " " + $("#year").val(),
+					launch : $("#year").val() + " " + $("#quarter").val(),
 					winconf : $("#winconf").val()
 				};
 
@@ -119,18 +119,17 @@ var deleteRow = function(key) {
 };
 
 var saveToLocalStorage = function(data, row, key){
-		(key)? data[key]=row : (row.id == 1 && data[2])? data[key]=row : data.push(row);
+
+		(key>=0) ? data[key]=row : data.push(row);
+
 		localStorage.setItem("data", JSON.stringify(data));
 		dialog.dialog("close");
 		loadData();
 		loadLabels();
 	};
 
-function loadData() {
-
-	var data = JSON.parse(localStorage.getItem("data")) || [];
-
-	//clean tbody 
+var renderTable = function(data) {
+	//clean tbody
 	$("#tbody").html("");
 
 	data.forEach(function(row, index) {
@@ -140,7 +139,11 @@ function loadData() {
 		var rendered = Mustache.render(template, row);
 		$("#tbody").append(rendered);
 	});
+};
 
+var loadData = function(){
+	var data = JSON.parse(localStorage.getItem("data")) || [];
+	renderTable(data);
 };
 
 var loadLabels = function() {
@@ -171,7 +174,7 @@ var loadLabels = function() {
 loadData();
 loadLabels();
 
-$("#myForm").validate({
+modalForm.validate({
 	rules: {
     	title: {
 			required: true,
@@ -183,3 +186,14 @@ $("#myForm").validate({
 		}
 	}
 });
+
+var sortItems = function(tableColumn){
+	var data = JSON.parse(localStorage.getItem("data"));
+	var compare = function(a, b) {
+				if (a[tableColumn] < b[tableColumn]) return -1;
+	            if (a[tableColumn] > b[tableColumn]) return 1;
+	        	return 0;
+	};
+	data.sort(compare);
+	renderTable(data);
+};
